@@ -56,7 +56,7 @@ class AssistantRunFailedError(Exception):
         pass
     
 class AssistantManager:
-    thread_id = "thread_Tykxcyn0Ip6gXTmb5yjYnwZ7"
+    thread_id = None
     assisstant_id = "asst_akXuAr41x3T9oacZ9RUSbJHw"
     
     def __init__(self, model: str = model) -> None:
@@ -120,15 +120,15 @@ class AssistantManager:
             response = last_message.content[0].text.value
             role = last_message.role
             summary.append(response)
-            self.summary = summary
+            self.summary = "\n".join(summary)
             print(f"SUMMARY----->{role.capitalize()}: ==> {response}")
             
     def call_required_functions(self, required_actions):
         if not self.run:
             return
-        tool_output = []
+        tool_outputs = []
         
-        for action in required_actions["tools_calls"]:
+        for action in required_actions["tool_calls"]:
             func_name = action["function"]["name"]
             arguments = json.loads(action["function"]["arguments"])
             
@@ -138,14 +138,15 @@ class AssistantManager:
                 final_string = ""
                 for item in output:
                     final_string += "".join(item)
-                tool_output.append({"tool_call_id":action["id"], "output":final_string})
+                tool_outputs.append({"tool_call_id":action["id"], "output":final_string})
             else:
                 raise ValueError(f"Function {func_name} not found")
+            
         print("Submitiing output back to the Assisstant")
-        self.client.beta.threads.runs.submit_tool_output(
+        self.client.beta.threads.runs.submit_tool_outputs(
             thread_id=self.thread.id,
             run_id=self.run.id,
-            tool_output=tool_output
+            tool_outputs=tool_outputs
             )
         
     # for streamlit
@@ -156,7 +157,10 @@ class AssistantManager:
             if self.thread and self.run:
                 while True:
                     time.sleep(5)
-                    run_status = self.client.beta.threads.runs.retrieve(thread_id=self.thread.id, run_id=self.run.id)
+                    run_status = self.client.beta.threads.runs.retrieve(
+                        thread_id=self.thread.id,
+                        run_id=self.run.id
+                        )
                     print(f"Run Status: {run_status.model_dump_json(indent=4)}")
                     
                     if run_status.status == "completed":
@@ -164,11 +168,12 @@ class AssistantManager:
                         break
                     elif run_status.status == "requires_action":
                         print("Run requires action")
-                        self.call_required_functions(required_actions=run_status.required_actions.submit_tool_output.model_dump)
-                        break
+                        self.call_required_functions(required_actions=run_status.required_action.submit_tool_outputs.model_dump())
+                        
                     elif run_status.status == "failed":
                         print("Run failed")
                         raise AssistantRunFailedError("Assistant run failed")
+                    
                     elif run_status.status == "stopped":
                         print("Run stopped")
                         break
@@ -179,6 +184,7 @@ class AssistantManager:
             run_id=self.run.id
             )
         print(f"Run Steps---> {run_steps}")
+        return run_steps.data   
 
 
 
@@ -222,7 +228,7 @@ def main():
                 
                 manager.create_message(
                     role="user",
-                    content=f"summarize the news on this topic: {instructions}"
+                    content=f"summarize the news on this topic: {instructions}?"
                 )
                 
                 manager.run_assistant(instructions="summarize the news on this topic")
