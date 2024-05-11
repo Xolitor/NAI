@@ -53,6 +53,7 @@ def get_news(topic):
     except requests.exceptions.RequestException as e:
         print("Error occured during API request", e)
         
+  
 def get_weather(city):
     url = f"https://api.openweathermap.org/data/2.5/forecast?q={city}&appid={weather_api_id}&units=metric"
     try:
@@ -206,28 +207,29 @@ class AssistantManager:
             
     def wait_for_run_completion(self):
             if self.thread and self.run:
-                while True:
-                    time.sleep(5)
-                    run_status = self.client.beta.threads.runs.retrieve(
-                        thread_id=self.thread.id,
-                        run_id=self.run.id
-                        )
-                    print(f"Run Status: {run_status.model_dump_json(indent=4)}")
-                    
-                    if run_status.status == "completed":
-                        self.process_message()
-                        break
-                    elif run_status.status == "requires_action":
-                        print("Run requires action")
-                        self.call_required_functions(required_actions=run_status.required_action.submit_tool_outputs.model_dump())
+                with st.spinner("Wait... Generating response..."):
+                    while True:
+                        time.sleep(5)
+                        run_status = self.client.beta.threads.runs.retrieve(
+                            thread_id=self.thread.id,
+                            run_id=self.run.id
+                            )
+                        print(f"Run Status: {run_status.model_dump_json(indent=4)}")
                         
-                    elif run_status.status == "failed":
-                        print("Run failed")
-                        raise AssistantRunFailedError("Assistant run failed")
-                    
-                    elif run_status.status == "stopped":
-                        print("Run stopped")
-                        break
+                        if run_status.status == "completed":
+                            self.process_message()
+                            break
+                        elif run_status.status == "requires_action":
+                            print("Run requires action")
+                            self.call_required_functions(required_actions=run_status.required_action.submit_tool_outputs.model_dump())
+                            
+                        elif run_status.status == "failed":
+                            print("Run failed")
+                            raise AssistantRunFailedError("Assistant run failed")
+                        
+                        elif run_status.status == "stopped":
+                            print("Run stopped")
+                            break
                     
     def run_steps(self):
         run_steps = self.client.beta.threads.runs.steps.list(
@@ -243,10 +245,10 @@ def main():
     #bitcoin_news = get_news("Israel")
     #print(bitcoin_news[0])
     manager = AssistantManager()
-    
+    st.set_page_config(page_title="NAI", page_icon=":books:")
     st.title("NAI: Your personal Assistant")
     
-    st.write("NAI has 2 functionalities: \n 1. Ask to summarize a list of articles on a given topic \n 2. Ask to give the weather of a city")
+    st.write("NAI has 2 functionalities: \n 1. Ask for a list of news articles on a given topic \n 2. Ask to give the weather of a city")
     
     with st.form(key="user_input_form"):
         instructions = st.text_input("Ask for news on a topic or the weather of a city: ")
@@ -259,7 +261,8 @@ def main():
             try:
                 manager.create_assistant(
                     name="NAIv2",
-                    instructions="You are a personal Assistant who knows how to take a list of article's titles and descriptions and then write a short summary of all the news articles. \n You can also give the weather forecast of a city in the upcoming 5 days.",
+                    instructions="""You are a personal Assistant who knows how to take a list of article's titles and descriptions and then write a short summary of all the news articles. 
+                    You can also give the weather forecast for a city up to 5 days. Summarize with a sentence for each day.""",
                     tools=[
                         {
                             "type": "function",
@@ -316,7 +319,6 @@ def main():
                 
             except AssistantRunFailedError:
                 st.error("Assistant run failed. Please try again later.")
-            
                     
 if __name__ == "__main__":
     main()
