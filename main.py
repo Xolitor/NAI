@@ -12,6 +12,7 @@ load_dotenv()
 
 news_api_id = os.environ.get("NEWS_API_KEY")
 weather_api_id = os.environ.get("WEATHER_API_KEY")
+ass_id = os.environ.get("ASSISTANT_KEY")
 client = openai.OpenAI()
 
 model = "gpt-3.5-turbo-16k"
@@ -95,13 +96,32 @@ def get_weather(city):
     except requests.exceptions.RequestException as e:
         print("Error occured during API request", e)       
         
+def generate_weather_image(weather_info):
+    latest_forecast = weather_info['weather_forecasts'][0]    
+    if not latest_forecast:
+        return {"error": "No weather data available for the specified date and time"}
+    
+    prompt = (
+        f"""A scenic view of {weather_info['city_name']} with all the following information"
+        {latest_forecast}"""
+    )
+
+    response = client.images.generate(
+        model="dall-e-3",
+        prompt=prompt,
+        size="1024x1024",
+        quality="standard",
+        n=1,
+    )
+
+    return response.data[0].url
     
 class AssistantRunFailedError(Exception):
         pass
     
 class AssistantManager:
     thread_id = None
-    assisstant_id = "asst_jYmoAA3EhXOL3JXc5bdVNNlu"
+    assisstant_id = ass_id
     
     def __init__(self, model: str = model) -> None:
         self.client = client
@@ -194,7 +214,7 @@ class AssistantManager:
             else:
                 raise ValueError(f"Function {func_name} not found")
             
-        print("Submitiing output back to the Assisstant")
+        print("Submitting output back to the Assisstant")
         self.client.beta.threads.runs.submit_tool_outputs(
             thread_id=self.thread.id,
             run_id=self.run.id,
@@ -239,8 +259,6 @@ class AssistantManager:
         print(f"Run Steps---> {run_steps}")                
         return run_steps.data   
 
-
-
 def main():
     #bitcoin_news = get_news("Israel")
     #print(bitcoin_news[0])
@@ -248,7 +266,7 @@ def main():
     st.set_page_config(page_title="NAI", page_icon=":books:")
     st.title("NAI: Your personal Assistant")
     
-    st.write("NAI has 2 functionalities: \n 1. Ask for a list of news articles on a given topic \n 2. Ask to give the weather of a city")
+    st.write("NAI has 2 functionalities: \n 1. Ask for a list of news articles on a given topic \n 2. Ask to give the weather forecast of a city")
     
     with st.form(key="user_input_form"):
         instructions = st.text_input("Ask for news on a topic or the weather of a city: ")
@@ -256,6 +274,22 @@ def main():
         
         #city_weather = st.text_input("Enter City: ")
         #submit_button_WAI = st.form_submit_button(label="Weather NAI")  
+            
+            
+        if st.form_submit_button("Generate Weather Image"):
+            if instructions:
+                weather_info = get_weather(instructions)
+                latest_forecast = weather_info['weather_forecasts'][0]
+                #city_image = weather_info["city_name"]
+                image_url = generate_weather_image(weather_info)
+                if "error" not in image_url:
+                    st.image(image_url)
+                    st.write(latest_forecast)
+                else:
+                    st.error(image_url["error"])
+            else:
+                st.warning("Please enter a valid city.")
+        
         
         if submit_button_NAI:
             try:
@@ -319,6 +353,7 @@ def main():
                 
             except AssistantRunFailedError:
                 st.error("Assistant run failed. Please try again later.")
+                
                     
 if __name__ == "__main__":
     main()
