@@ -76,14 +76,14 @@ def get_weather(city):
                 wind_speed = forecast["wind"]["speed"]
                 humidity = forecast["main"]["humidity"]
                 
-                weather_forecast= f"""
-                    Date/Time: {date_time},
-                    Temperature: {temperature},
-                    Feels Like: {feels_like},
-                    Description: {description},
-                    Wind Speed: {wind_speed},
-                    Humidity: {humidity}
-                """
+                weather_forecast= {
+                    'Date/Time' : {date_time},
+                    'Temperature': {temperature},
+                    'Feels Like': {feels_like},
+                    'Description': {description},
+                    'Wind Speed': {wind_speed},
+                    'Humidity': {humidity}
+                }
                 weather_forecasts.append(weather_forecast)
                 
             result = {
@@ -97,22 +97,29 @@ def get_weather(city):
         print("Error occured during API request", e)       
         
 def generate_weather_image(weather_info):
-    latest_forecast = weather_info['weather_forecasts'][0]    
-    if not latest_forecast:
-        return {"error": "No weather data available for the specified date and time"}
-    
-    prompt = (
-        f"""A scenic view of {weather_info['city_name']} with all the following information"
-        {latest_forecast}"""
-    )
+    with st.spinner("Wait... Generating response..."):
+        latest_forecast = weather_info['weather_forecasts'][0]    
+        if not latest_forecast:
+            return {"error": "No weather data available for the specified date and time"}
+        
+        prompt = (
+            f"""A real world view of {weather_info['city_name']} like in weather forecasts. Here is some information about the weather of that city:
+            {latest_forecast['Description']} weather. The date and time is {latest_forecast['Date/Time']}. The temperature is {latest_forecast['Temperature']}°C, 
+            it feels like {latest_forecast['Feels Like']}°C. 
+            Display temperature {latest_forecast['Temperature']}°C somewhere on the weather forecast.
+            """
+        )
+        # The wind speed is {latest_forecast['Wind Speed']} m/s
+        # f"and the humidity is {latest_forecast['Humidity']}%. "
 
-    response = client.images.generate(
-        model="dall-e-3",
-        prompt=prompt,
-        size="1024x1024",
-        quality="standard",
-        n=1,
-    )
+
+        response = client.images.generate(
+            model="dall-e-3",
+            prompt=prompt,
+            size="1024x1024",
+            quality="standard",
+            n=1,
+        )
 
     return response.data[0].url
     
@@ -221,7 +228,7 @@ class AssistantManager:
             tool_outputs=tool_outputs
             )
         
-    # for streamlit
+    
     def get_summary(self):
         return self.summary
             
@@ -272,15 +279,15 @@ def main():
         instructions = st.text_input("Ask for news on a topic or the weather of a city: ")
         submit_button_NAI = st.form_submit_button(label="Run NAI")  
         
-        #city_weather = st.text_input("Enter City: ")
-        #submit_button_WAI = st.form_submit_button(label="Weather NAI")  
-            
+        city = st.text_input("Enter City for an image of the weather: ")
+        # if st.form_submit_button("Generate json weatherapi"):       
+        #     weather_info = get_weather(city)
+        #     st.write(type(weather_info['weather_forecasts'][0]['Date/Time']))
             
         if st.form_submit_button("Generate Weather Image"):
-            if instructions:
-                weather_info = get_weather(instructions)
+            if city:
+                weather_info = get_weather(city)
                 latest_forecast = weather_info['weather_forecasts'][0]
-                #city_image = weather_info["city_name"]
                 image_url = generate_weather_image(weather_info)
                 if "error" not in image_url:
                     st.image(image_url)
