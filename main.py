@@ -15,7 +15,7 @@ weather_api_id = os.environ.get("WEATHER_API_KEY")
 ass_id = os.environ.get("ASSISTANT_KEY")
 client = openai.OpenAI()
 
-model = "gpt-3.5-turbo-16k"
+model = "gpt-4o"
 
 def get_news(topic):
     url =(
@@ -279,7 +279,7 @@ def main():
         instructions = st.text_input("Ask for news on a topic or the weather of a city: ")
         submit_button_NAI = st.form_submit_button(label="Run NAI")  
         
-        city = st.text_input("Enter City for an image of the weather: ")
+        city = st.text_input("Enter City for weather image: ")
         # if st.form_submit_button("Generate json weatherapi"):       
         #     weather_info = get_weather(city)
         #     st.write(type(weather_info['weather_forecasts'][0]['Date/Time']))
