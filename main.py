@@ -11,6 +11,8 @@ from datetime import datetime
 load_dotenv()
 
 news_api_id = os.environ.get("NEWS_API_KEY")
+weather_api_id = os.environ.get("WEATHER_API_KEY")
+ass_id = os.environ.get("ASSISTANT_KEY")
 client = openai.OpenAI()
 
 model = "gpt-3.5-turbo-16k"
@@ -22,16 +24,16 @@ def get_news(topic):
     try:
         response = requests.get(url)
         if response.status_code == 200:
-            news = json.dumps(response.json(), indent=4)
-            news_json = json.loads(news)
-            data = news_json
+            #news = json.dumps(response.json(), indent=4)
+            #news_json = json.loads(news)
+            data = response.json()
+            articles = data.get("articles", [])[:10] 
             
-            #Access all the fields in the JSON response
-            status = data["status"]
-            total_results = data["totalResults"]
-            articles = data["articles"]
+            #status = data["status"]
+            #total_results = ["totalResults"]
+            #articles = data["articles"]
             final_news = []
-            
+              
             for article in articles:
                 title = article["title"]
                 description = article["description"]
@@ -51,13 +53,82 @@ def get_news(topic):
     
     except requests.exceptions.RequestException as e:
         print("Error occured during API request", e)
+        
+  
+def get_weather(city):
+    url = f"https://api.openweathermap.org/data/2.5/forecast?q={city}&appid={weather_api_id}&units=metric"
+    try:
+        response = requests.get(url)
+        if response.status_code == 200:
+            weather = json.dumps(response.json(), indent=4)
+            weather_json = json.loads(weather)
+            data = weather_json
+            
+            city_name = data["city"]["name"]
+            country = data["city"]["country"]
+            weather_forecasts = []
+
+            for forecast in data["list"]:
+                date_time = forecast["dt_txt"]
+                temperature = forecast["main"]["temp"]
+                feels_like = forecast["main"]["feels_like"]
+                description = forecast["weather"][0]["description"]
+                wind_speed = forecast["wind"]["speed"]
+                humidity = forecast["main"]["humidity"]
+                
+                weather_forecast= {
+                    'Date/Time' : {date_time},
+                    'Temperature': {temperature},
+                    'Feels Like': {feels_like},
+                    'Description': {description},
+                    'Wind Speed': {wind_speed},
+                    'Humidity': {humidity}
+                }
+                weather_forecasts.append(weather_forecast)
+                
+            result = {
+                "city_name": city_name,
+                "country": country,
+                "weather_forecasts": weather_forecasts
+            }
+        return result
+                
+    except requests.exceptions.RequestException as e:
+        print("Error occured during API request", e)       
+        
+def generate_weather_image(weather_info):
+    with st.spinner("Wait... Generating response..."):
+        latest_forecast = weather_info['weather_forecasts'][0]    
+        if not latest_forecast:
+            return {"error": "No weather data available for the specified date and time"}
+        
+        prompt = (
+            f"""A real world view of {weather_info['city_name']} like in weather forecasts. Here is some information about the weather of that city:
+            {latest_forecast['Description']} weather. The date and time is {latest_forecast['Date/Time']}. The temperature is {latest_forecast['Temperature']}°C, 
+            it feels like {latest_forecast['Feels Like']}°C. 
+            Display temperature {latest_forecast['Temperature']}°C somewhere on the weather forecast.
+            """
+        )
+        # The wind speed is {latest_forecast['Wind Speed']} m/s
+        # f"and the humidity is {latest_forecast['Humidity']}%. "
+
+
+        response = client.images.generate(
+            model="dall-e-3",
+            prompt=prompt,
+            size="1024x1024",
+            quality="standard",
+            n=1,
+        )
+
+    return response.data[0].url
     
 class AssistantRunFailedError(Exception):
         pass
     
 class AssistantManager:
     thread_id = None
-    assisstant_id = "asst_akXuAr41x3T9oacZ9RUSbJHw"
+    assisstant_id = ass_id
     
     def __init__(self, model: str = model) -> None:
         self.client = client
@@ -103,12 +174,11 @@ class AssistantManager:
                 content=content
             )
             
-    def run_assistant(self, instructions):
+    def run_assistant(self):
         if self.thread and self.assistant:
             self.run = self.client.beta.threads.runs.create(
                 thread_id=self.thread.id,
-                assistant_id=self.assisstant_id,
-                instructions=instructions
+                assistant_id=self.assisstant_id
             )
     
     def process_message(self):
@@ -139,71 +209,101 @@ class AssistantManager:
                 for item in output:
                     final_string += "".join(item)
                 tool_outputs.append({"tool_call_id":action["id"], "output":final_string})
+
+            elif func_name == "get_weather":
+                output = get_weather(city=arguments["city"])
+                print(f"STUFFFF;;;;{output}")
+                final_string = ""
+                for item in output["weather_forecasts"]:
+                    final_string += "".join(item)
+                tool_outputs.append({"tool_call_id":action["id"], "output":final_string})
+                
             else:
                 raise ValueError(f"Function {func_name} not found")
             
-        print("Submitiing output back to the Assisstant")
+        print("Submitting output back to the Assisstant")
         self.client.beta.threads.runs.submit_tool_outputs(
             thread_id=self.thread.id,
             run_id=self.run.id,
             tool_outputs=tool_outputs
             )
         
-    # for streamlit
+    
     def get_summary(self):
         return self.summary
             
     def wait_for_run_completion(self):
             if self.thread and self.run:
-                while True:
-                    time.sleep(5)
-                    run_status = self.client.beta.threads.runs.retrieve(
-                        thread_id=self.thread.id,
-                        run_id=self.run.id
-                        )
-                    print(f"Run Status: {run_status.model_dump_json(indent=4)}")
-                    
-                    if run_status.status == "completed":
-                        self.process_message()
-                        break
-                    elif run_status.status == "requires_action":
-                        print("Run requires action")
-                        self.call_required_functions(required_actions=run_status.required_action.submit_tool_outputs.model_dump())
+                with st.spinner("Wait... Generating response..."):
+                    while True:
+                        time.sleep(5)
+                        run_status = self.client.beta.threads.runs.retrieve(
+                            thread_id=self.thread.id,
+                            run_id=self.run.id
+                            )
+                        print(f"Run Status: {run_status.model_dump_json(indent=4)}")
                         
-                    elif run_status.status == "failed":
-                        print("Run failed")
-                        raise AssistantRunFailedError("Assistant run failed")
-                    
-                    elif run_status.status == "stopped":
-                        print("Run stopped")
-                        break
+                        if run_status.status == "completed":
+                            self.process_message()
+                            break
+                        elif run_status.status == "requires_action":
+                            print("Run requires action")
+                            self.call_required_functions(required_actions=run_status.required_action.submit_tool_outputs.model_dump())
+                            
+                        elif run_status.status == "failed":
+                            print("Run failed")
+                            raise AssistantRunFailedError("Assistant run failed")
+                        
+                        elif run_status.status == "stopped":
+                            print("Run stopped")
+                            break
                     
     def run_steps(self):
         run_steps = self.client.beta.threads.runs.steps.list(
             thread_id=self.thread.id,
             run_id=self.run.id
             )
-        print(f"Run Steps---> {run_steps}")
+        print(f"Run Steps---> {run_steps}")                
         return run_steps.data   
-
-
 
 def main():
     #bitcoin_news = get_news("Israel")
     #print(bitcoin_news[0])
     manager = AssistantManager()
+    st.set_page_config(page_title="NAI", page_icon=":books:")
+    st.title("NAI: Your personal Assistant")
     
-    st.title("NAI: Your personal news article summarizer Assistant")
+    st.write("NAI has 2 functionalities: \n 1. Ask for a list of news articles on a given topic \n 2. Ask to give the weather forecast of a city")
     
     with st.form(key="user_input_form"):
-        instructions = st.text_input("Enter topic: ")
-        submit_button = st.form_submit_button(label="Run NAI")  
+        instructions = st.text_input("Ask for news on a topic or the weather of a city: ")
+        submit_button_NAI = st.form_submit_button(label="Run NAI")  
         
-        if submit_button:
+        city = st.text_input("Enter City for an image of the weather: ")
+        # if st.form_submit_button("Generate json weatherapi"):       
+        #     weather_info = get_weather(city)
+        #     st.write(type(weather_info['weather_forecasts'][0]['Date/Time']))
+            
+        if st.form_submit_button("Generate Weather Image"):
+            if city:
+                weather_info = get_weather(city)
+                latest_forecast = weather_info['weather_forecasts'][0]
+                image_url = generate_weather_image(weather_info)
+                if "error" not in image_url:
+                    st.image(image_url)
+                    st.write(latest_forecast)
+                else:
+                    st.error(image_url["error"])
+            else:
+                st.warning("Please enter a valid city.")
+        
+        
+        if submit_button_NAI:
             try:
                 manager.create_assistant(
-                    name="NAI",
-                    instructions="You are a personal article summarizer Assistant who knows how to take a list of article's titles and descriptions and then write a short summary of all the news articles ",
+                    name="NAIv2",
+                    instructions="""You are a personal Assistant who knows how to take a list of article's titles and descriptions and then write a short summary of all the news articles. 
+                    You can also give the weather forecast for a city up to 5 days. Summarize with a sentence for each day.""",
                     tools=[
                         {
                             "type": "function",
@@ -221,17 +321,34 @@ def main():
                                     "required": ["topic"],
                                 },
                             }, 
+                        },
+                        {
+                            "type": "function",
+                            "function": {
+                                "name": "get_weather",
+                                "description": "Get the weather forecast of a city in the upcoming 5 days",
+                                "parameters": {
+                                    "type": "object",
+                                    "properties": {
+                                        "city": {
+                                            "type": "string",
+                                            "description": "The city for which you want to get the weather"
+                                        }
+                                    },
+                                    "required": ["city"],
+                                },
+                            }
                         }
-                    ],
+                    ]
                 )
                 manager.create_thread()
                 
                 manager.create_message(
                     role="user",
-                    content=f"summarize the news on this topic: {instructions}?"
+                    content=f"{instructions}"
                 )
                 
-                manager.run_assistant(instructions="summarize the news on this topic")
+                manager.run_assistant()
                 
                 manager.wait_for_run_completion()
                 
@@ -243,7 +360,7 @@ def main():
                 
             except AssistantRunFailedError:
                 st.error("Assistant run failed. Please try again later.")
-        
-        
+                
+                    
 if __name__ == "__main__":
     main()
