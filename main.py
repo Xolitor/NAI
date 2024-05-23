@@ -76,14 +76,14 @@ def get_weather(city):
                 wind_speed = forecast["wind"]["speed"]
                 humidity = forecast["main"]["humidity"]
                 
-                weather_forecast= {
-                    'Date/Time' : {date_time},
-                    'Temperature': {temperature},
-                    'Feels Like': {feels_like},
-                    'Description': {description},
-                    'Wind Speed': {wind_speed},
-                    'Humidity': {humidity}
-                }
+                weather_forecast= f"""
+                    Date/Time: {date_time},
+                    Temperature: {temperature},
+                    Feels Like: {feels_like},
+                    Description: {description},
+                    Wind Speed: {wind_speed},
+                    Humidity: {humidity}
+                """
                 weather_forecasts.append(weather_forecast)
                 
             result = {
@@ -103,15 +103,9 @@ def generate_weather_image(weather_info):
             return {"error": "No weather data available for the specified date and time"}
         
         prompt = (
-            f"""A real world view of {weather_info['city_name']} like in weather forecasts. Here is some information about the weather of that city:
-            {latest_forecast['Description']} weather. The date and time is {latest_forecast['Date/Time']}. The temperature is {latest_forecast['Temperature']}°C, 
-            it feels like {latest_forecast['Feels Like']}°C. 
-            Display temperature {latest_forecast['Temperature']}°C somewhere on the weather forecast.
-            """
+        f"""A  view of {weather_info['city_name']} for a weather forecast with all the following information:"
+        {latest_forecast}"""
         )
-        # The wind speed is {latest_forecast['Wind Speed']} m/s
-        # f"and the humidity is {latest_forecast['Humidity']}%. "
-
 
         response = client.images.generate(
             model="dall-e-3",
@@ -267,8 +261,6 @@ class AssistantManager:
         return run_steps.data   
 
 def main():
-    #bitcoin_news = get_news("Israel")
-    #print(bitcoin_news[0])
     manager = AssistantManager()
     st.set_page_config(page_title="NAI", page_icon=":books:")
     st.title("NAI: Your personal Assistant")
@@ -280,9 +272,9 @@ def main():
         submit_button_NAI = st.form_submit_button(label="Run NAI")  
         
         city = st.text_input("Enter City for an image of the weather: ")
-        # if st.form_submit_button("Generate json weatherapi"):       
-        #     weather_info = get_weather(city)
-        #     st.write(type(weather_info['weather_forecasts'][0]['Date/Time']))
+        if st.form_submit_button("Generate json weatherapi"):       
+            weather_info = get_weather(city)
+            st.write(weather_info['weather_forecasts'][0])
             
         if st.form_submit_button("Generate Weather Image"):
             if city:
