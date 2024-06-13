@@ -17,8 +17,8 @@ Pour commencer avec NAI, suivez ces étapes :
 ## Cloner le Répertoire
 ```bash
 Copier le code
-git clone https://github.com/votre-nom-utilisateur/nai-assistant.git
-cd nai-assistant
+git clone https://github.com/Xolitor/NAI
+cd NAI
 ```
 ## Créer et Activer l'Environnement Virtuel
 Pour Windows :
@@ -56,19 +56,19 @@ streamlit run app.py
 ## Utilisation
 **Récupération de Nouvelles**
 1. Entrez un sujet dans le champ de saisie intitulé "Ask for news on a topic or the weather of a city:".
-Exemple de prompt: "Give me the latest news on bitcoin ?" ou encore "What's the news on Microsoft ?" 
-2. Note : Il est préférable de choisir des sujets connus et mondiaux, car l'assistant va chercher dans une base de données de sites principalement américains.
-3. Cliquez sur "Run NAI".
-4. L'assistant récupérera et résumera les derniers articles sur le sujet spécifié.
+    - Exemple de prompt: "Give me the latest news on bitcoin ?" ou encore "What's the news on Microsoft ?" 
+    - **Note** : Il est préférable de choisir des sujets connus et mondiaux, car l'assistant va chercher dans une base de données de sites principalement américains.
+2. Cliquez sur "Run NAI".
+3. L'assistant récupérera et résumera les derniers articles sur le sujet spécifié.
    
 **Prévision Météorologique**
 1. Entrez une ville dans le champ de saisie intitulé "Ask for news on a topic or the weather of a city:".
-2. Exemple de prompt: "Give me the weather forecast for Paris ?" ou encore "What is the weather going to be in Dubai ?"
-3. Cliquez sur "Run NAI".
-4. L'assistant récupérera et résumera les prévisions météos sur la ville pour les 5 jours qui arrivent.
+     - Exemple de prompt: "Give me the weather forecast for Paris ?" ou encore "What is the weather going to be in Dubai ?"   
+2. Cliquez sur "Run NAI".
+3. L'assistant récupérera et résumera les prévisions météos sur la ville pour les 5 jours qui arrivent.
    
 **Génération d'image météorologique:**
-1. Entrez uniquement le nom d'une ville dans le champ de saisie intitulé "Enter City for an image of the weather:"
-Exemple de prompt: "Paris", "Nice", "London", "New York"
+1. Entrez uniquement le nom d'une ville dans le champ de saisie intitulé "Enter City for an image of the weather:"   
+    - Exemple de prompt: "Paris", "Nice", "London", "New York"
 2. Cliquez sur "Generate Weather Image" pour générer une image basée sur les dernieres prévisions météorologiques.
 3. L'assistant génerera une image de la ville avec la météo de la prévision la plus récente.
