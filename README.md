@@ -16,7 +16,6 @@ Pour commencer avec NAI, suivez ces étapes :
 - Outil de virtualisation d'environnement (par exemple, venv)
 ## Cloner le Répertoire
 ```bash
-Copier le code
 git clone https://github.com/Xolitor/NAI
 cd NAI
 ```
@@ -50,7 +49,7 @@ ASSISTANT_KEY=votre_cle_api_assistant
 ## Lancer le Site Web
 Pour démarrer l'application web Streamlit, exécutez la commande suivante :
 ```bash
-streamlit run app.py
+streamlit run main.py
 ```
 
 ## Utilisation
