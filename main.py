@@ -272,9 +272,9 @@ def main():
         submit_button_NAI = st.form_submit_button(label="Run NAI")  
         
         city = st.text_input("Enter City for an image of the weather: ")
-        if st.form_submit_button("Generate json weatherapi"):       
-            weather_info = get_weather(city)
-            st.write(weather_info['weather_forecasts'][0])
+        # if st.form_submit_button("Generate json weatherapi"):       
+        #     weather_info = get_weather(city)
+        #     st.write(weather_info['weather_forecasts'][0])
             
         if st.form_submit_button("Generate Weather Image"):
             if city:
