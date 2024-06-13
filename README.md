@@ -14,12 +14,12 @@ Pour commencer avec NAI, suivez ces étapes :
 ## Prérequis
 + La liste des librairies et de leur version est disponible dans le requirements.txt
 - Outil de virtualisation d'environnement (par exemple, venv)
-## Cloner le Répertoire
-```bash
-git clone https://github.com/Xolitor/NAI
-cd NAI
-```
-## Créer et Activer l'Environnement Virtuel
+
+## Lancer le projet
+
+Pour lancer le projet il y a 3 étapes:
+
+### 1. Créer et Activer l'Environnement Virtuel
 Pour Windows :
 ```bash
 python -m venv venv
@@ -35,9 +35,9 @@ Installer les Dépendances
 pip install -r requirements.txt
 ```
 
-## Configurer les Variables d'Environnement
-Créez un fichier .env dans le répertoire racine du projet et ajoutez vos clés API comme suit :
-makefile
+### 2. Configurer les Variables d'Environnement
+Créez un fichier .env dans le répertoire racine du projet et ajoutez vos clés API fournit dans le .txt comme suit :
+
 Copier le code
 ```
 OPENAI_API_KEY=votre_cle_api_openai
@@ -46,7 +46,7 @@ WEATHER_API_KEY=votre_cle_api_weather
 ASSISTANT_KEY=votre_cle_api_assistant
 ```
 
-## Lancer le Site Web
+### 3. Lancer le Site Web
 Pour démarrer l'application web Streamlit, exécutez la commande suivante :
 ```bash
 streamlit run main.py
