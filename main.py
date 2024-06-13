@@ -5,6 +5,7 @@ import time
 import requests
 import json
 import streamlit as st
+from collections import defaultdict
 
 load_dotenv()
 
@@ -50,27 +51,44 @@ def get_weather(city):
             data = response.json()
             city_name = data["city"]["name"]
             country = data["city"]["country"]
-            weather_forecasts = []
-            for forecast in data["list"][:5]:
-                date_time = forecast["dt_txt"]
+            daily_forecasts = defaultdict(list)
+            
+            for forecast in data["list"]:
+                date = forecast["dt_txt"].split(" ")[0]
                 temperature = forecast["main"]["temp"]
                 feels_like = forecast["main"]["feels_like"]
                 description = forecast["weather"][0]["description"]
                 wind_speed = forecast["wind"]["speed"]
                 humidity = forecast["main"]["humidity"]
-                weather_forecast = f"""
-                **Date/Time**: {date_time}
-                **Temperature**: {temperature}°C
-                **Feels Like**: {feels_like}°C
-                **Description**: {description}
-                **Wind Speed**: {wind_speed} m/s
-                **Humidity**: {humidity}%
+                daily_forecasts[date].append({
+                    "temperature": temperature,
+                    "feels_like": feels_like,
+                    "description": description,
+                    "wind_speed": wind_speed,
+                    "humidity": humidity
+                })
+            
+            weather_summaries = []
+            for date, forecasts in daily_forecasts.items():
+                avg_temp = sum(f["temperature"] for f in forecasts) / len(forecasts)
+                avg_feels_like = sum(f["feels_like"] for f in forecasts) / len(forecasts)
+                descriptions = ", ".join(set(f["description"] for f in forecasts))
+                avg_wind_speed = sum(f["wind_speed"] for f in forecasts) / len(forecasts)
+                avg_humidity = sum(f["humidity"] for f in forecasts) / len(forecasts)
+                weather_summary = f"""
+                **Date**: {date}
+                **Average Temperature**: {avg_temp:.2f}°C
+                **Average Feels Like**: {avg_feels_like:.2f}°C
+                **Descriptions**: {descriptions}
+                **Average Wind Speed**: {avg_wind_speed:.2f} m/s
+                **Average Humidity**: {avg_humidity:.2f}%
                 """
-                weather_forecasts.append(weather_forecast)
+                weather_summaries.append(weather_summary)
+            
             result = {
                 "city_name": city_name,
                 "country": country,
-                "weather_forecasts": weather_forecasts
+                "weather_summaries": weather_summaries
             }
             return result
     except requests.exceptions.RequestException as e:
@@ -78,7 +96,7 @@ def get_weather(city):
         return {}
 
 def generate_weather_image(weather_info):
-    latest_forecast = weather_info['weather_forecasts'][0]
+    latest_forecast = weather_info['weather_summaries'][0]
     if not latest_forecast:
         return {"error": "No weather data available for the specified date and time"}
 
@@ -176,7 +194,7 @@ class AssistantManager:
 
             elif func_name == "get_weather":
                 output = get_weather(city=arguments["city"])
-                final_string = "\n".join(output["weather_forecasts"])
+                final_string = "\n".join(output["weather_summaries"])
                 tool_outputs.append({"tool_call_id": action["id"], "output": final_string})
 
             else:
@@ -332,7 +350,7 @@ def main():
                     image_url = generate_weather_image(weather_info)
                     if "error" not in image_url:
                         st.image(image_url)
-                        st.write(weather_info['weather_forecasts'][0])
+                        st.write(weather_info['weather_summaries'][0])
                     else:
                         st.error(image_url["error"])
                 else:
