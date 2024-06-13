@@ -1,11 +1,10 @@
 import openai
 import os
-from dotenv import find_dotenv, load_dotenv
+from dotenv import load_dotenv
 import time
 import requests
 import json
 import streamlit as st
-from datetime import datetime
 
 load_dotenv()
 
@@ -31,11 +30,11 @@ def get_news(topic):
                 url = article["url"]
                 author = article["author"]
                 title_description = f"""
-                **Title**: {title}\n
-                **Author**: {author}\n
-                **Source**: {source_name}\n
-                **Description**: {description}\n
-                [Read more]({url})\n
+                **Title**: {title}
+                **Author**: {author}
+                **Source**: {source_name}
+                **Description**: {description}
+                [Read more]({url})
                 """
                 final_news.append(title_description)
             return final_news
@@ -60,12 +59,12 @@ def get_weather(city):
                 wind_speed = forecast["wind"]["speed"]
                 humidity = forecast["main"]["humidity"]
                 weather_forecast = f"""
-                **Date/Time**: {date_time}\n
-                **Temperature**: {temperature}°C\n
-                **Feels Like**: {feels_like}°C\n
-                **Description**: {description}\n
-                **Wind Speed**: {wind_speed} m/s\n
-                **Humidity**: {humidity}%\n
+                **Date/Time**: {date_time}
+                **Temperature**: {temperature}°C
+                **Feels Like**: {feels_like}°C
+                **Description**: {description}
+                **Wind Speed**: {wind_speed} m/s
+                **Humidity**: {humidity}%
                 """
                 weather_forecasts.append(weather_forecast)
             result = {
@@ -284,13 +283,45 @@ def main():
         city = st.text_input("Enter the city:")
         if st.button("Get Weather"):
             if city:
-                weather_info = get_weather(city)
-                if weather_info:
-                    st.write(f"Here is the weather forecast for {city} for the upcoming 5 days:")
-                    for idx, forecast in enumerate(weather_info['weather_forecasts']):
-                        st.write(f"**Day {idx+1}**: {forecast}")
-                else:
-                    st.error("Error fetching weather data.")
+                try:
+                    manager.create_assistant(
+                        name="NAIv2",
+                        instructions="""You are a personal Assistant who knows how to take a list of weather forecasts and then provide a summary of the weather for the upcoming days.""",
+                        tools=[
+                            {
+                                "type": "function",
+                                "function": {
+                                    "name": "get_weather",
+                                    "description": "Get the weather forecast of a city in the upcoming 5 days",
+                                    "parameters": {
+                                        "type": "object",
+                                        "properties": {
+                                            "city": {
+                                                "type": "string",
+                                                "description": "The city for which you want to get the weather"
+                                            }
+                                        },
+                                        "required": ["city"],
+                                    },
+                                },
+                            }
+                        ]
+                    )
+                    manager.create_thread()
+
+                    manager.create_message(
+                        role="user",
+                        content=f"Get weather for {city}"
+                    )
+
+                    manager.run_assistant()
+                    manager.wait_for_run_completion()
+
+                    summary = manager.get_summary()
+                    st.write(summary)
+
+                except AssistantRunFailedError:
+                    st.error("Assistant run failed. Please try again later.")
             else:
                 st.warning("Please enter a city.")
 
