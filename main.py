@@ -16,6 +16,7 @@ client = openai.OpenAI()
 
 model = "gpt-3.5-turbo-16k"
 
+# Fonctions pour récupérer les données des API
 def get_news(topic):
     url = f"https://newsapi.org/v2/everything?q={topic}&apiKey={news_api_id}"
     try:
@@ -240,24 +241,93 @@ class AssistantManager:
 
 def main():
     manager = AssistantManager()
-    st.set_page_config(page_title="NAI", page_icon=":books:", layout="centered")
-    st.title("NAI: Your personal Assistant")
+    st.set_page_config(page_title="NAI", page_icon=":books:", layout="wide")
+    st.markdown("""
+        <style>
+            .main {
+                background-color: #f0f2f6;
+                color: #333;
+            }
+            .title {
+                text-align: center;
+                color: #4a90e2;
+                margin-bottom: 20px;
+            }
+            .stTabs [data-baseweb="tab-list"] button {
+                font-size: 18px;
+                background-color: #f0f2f6;
+                border: none;
+                color: #4a90e2;
+                border-bottom: 2px solid transparent;
+                padding: 10px 20px;
+                margin: 0;
+            }
+            .stTabs [data-baseweb="tab-list"] button[aria-selected="true"] {
+                border-bottom: 2px solid #4a90e2;
+            }
+            .stTabs [data-baseweb="tab-list"] button:hover {
+                background-color: #e0e4e8;
+            }
+            .stTextInput div {
+                margin-top: 10px;
+                margin-bottom: 20px;
+            }
+            .stTextInput input {
+                border: 2px solid #4a90e2;
+                padding: 10px;
+                font-size: 16px;
+                border-radius: 5px;
+            }
+            .stButton button {
+                background-color: #4a90e2;
+                color: #fff;
+                border: none;
+                border-radius: 5px;
+                padding: 10px 20px;
+                font-size: 16px;
+                margin-top: 10px;
+                cursor: pointer;
+            }
+            .stButton button:hover {
+                background-color: #357ab7;
+            }
+            .stAlert div {
+                border-radius: 5px;
+            }
+            .card {
+                background-color: white;
+                padding: 15px;
+                border-radius: 10px;
+                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+                margin-bottom: 20px;
+            }
+            .card h4 {
+                margin: 0 0 10px 0;
+                color: #4a90e2;
+            }
+            .card p {
+                margin: 0;
+                color: #333;
+            }
+        </style>
+        """, unsafe_allow_html=True)
+    st.markdown("<h1 class='title'>NAI: Your Personal Assistant</h1>", unsafe_allow_html=True)
 
-    st.write("NAI has 2 functionalities:")
-    st.write("1. Ask for a list of news articles on a given topic")
-    st.write("2. Ask for the weather forecast of a city")
+    st.write("NAI offers two functionalities:")
+    st.write("1. Get a list of news articles on a given topic")
+    st.write("2. Get the weather forecast for a city")
 
-    tab1, tab2 = st.tabs(["News", "Weather"])
+    tab1, tab2 = st.tabs(["📰 News", "🌤️ Weather"])
 
     with tab1:
-        st.subheader("Get the latest news")
-        news_topic = st.text_input("Enter the topic you want news about:")
-        if st.button("Get News"):
+        st.subheader("Get the Latest News")
+        news_topic = st.text_input("Enter the topic you want news about:", key="news_input")
+        if st.button("Get News", key="news_button"):
             if news_topic:
                 try:
                     manager.create_assistant(
                         name="NAIv2",
-                        instructions="""You are a personal Assistant who knows how to take a list of article's titles and descriptions and then write a short summary of all the news articles.""",
+                        instructions="""You are a personal assistant who can summarize news articles based on their titles and descriptions.""",
                         tools=[
                             {
                                 "type": "function",
@@ -289,7 +359,8 @@ def main():
                     manager.wait_for_run_completion()
 
                     summary = manager.get_summary()
-                    st.write(summary)
+                    st.markdown("<div class='card'><h4>Here are some news articles:</h4></div>", unsafe_allow_html=True)
+                    st.markdown(f"<div class='card'><p>{summary}</p></div>", unsafe_allow_html=True)
 
                 except AssistantRunFailedError:
                     st.error("Assistant run failed. Please try again later.")
@@ -297,20 +368,20 @@ def main():
                 st.warning("Please enter a topic.")
 
     with tab2:
-        st.subheader("Get the weather forecast")
-        city = st.text_input("Enter the city:")
-        if st.button("Get Weather"):
+        st.subheader("Get the Weather Forecast")
+        city = st.text_input("Enter the city:", key="weather_input")
+        if st.button("Get Weather", key="weather_button"):
             if city:
                 try:
                     manager.create_assistant(
                         name="NAIv2",
-                        instructions="""You are a personal Assistant who knows how to take a list of weather forecasts and then provide a summary of the weather for the upcoming days.""",
+                        instructions="""You are a personal assistant who can provide weather summaries for the upcoming days.""",
                         tools=[
                             {
                                 "type": "function",
                                 "function": {
                                     "name": "get_weather",
-                                    "description": "Get the weather forecast of a city in the upcoming 5 days",
+                                    "description": "Get the weather forecast for a city for the upcoming 5 days",
                                     "parameters": {
                                         "type": "object",
                                         "properties": {
@@ -336,21 +407,22 @@ def main():
                     manager.wait_for_run_completion()
 
                     summary = manager.get_summary()
-                    st.write(summary)
+                    st.markdown(f"<div class='card'><h4>Here is the weather forecast for {city}:</h4></div>", unsafe_allow_html=True)
+                    st.markdown(f"<div class='card'><p>{summary}</p></div>", unsafe_allow_html=True)
 
                 except AssistantRunFailedError:
                     st.error("Assistant run failed. Please try again later.")
             else:
                 st.warning("Please enter a city.")
 
-        if st.button("Generate Weather Image"):
+        if st.button("Generate Weather Image", key="weather_image_button"):
             if city:
                 weather_info = get_weather(city)
                 if weather_info:
                     image_url = generate_weather_image(weather_info)
                     if "error" not in image_url:
                         st.image(image_url)
-                        st.write(weather_info['weather_summaries'][0])
+                        st.markdown(f"<div class='card'><p>{weather_info['weather_summaries'][0]}</p></div>", unsafe_allow_html=True)
                     else:
                         st.error(image_url["error"])
                 else:
