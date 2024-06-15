@@ -1,4 +1,4 @@
-from http import client
+import openai
 import os
 import requests
 from collections import defaultdict
@@ -9,6 +9,7 @@ load_dotenv()
 
 news_api_id = os.environ.get("NEWS_API_KEY")
 weather_api_id = os.environ.get("WEATHER_API_KEY")
+client = openai.OpenAI()
 
 def get_news(topic):
     url = f"https://newsapi.org/v2/everything?q={topic}&apiKey={news_api_id}"
@@ -90,19 +91,20 @@ def get_weather(city):
         return {}
 
 def generate_weather_image(weather_info):
-    latest_forecast = weather_info['weather_summaries'][0]
-    if not latest_forecast:
-        return {"error": "No weather data available for the specified date and time"}
+    with st.spinner("Wait... Generating response..."):
+        latest_forecast = weather_info['weather_summaries'][0]
+        if not latest_forecast:
+            return {"error": "No weather data available for the specified date and time"}
 
-    prompt = f"""A view of {weather_info['city_name']} for a weather forecast with all the following information:
-    {latest_forecast}"""
+        prompt = f"""A view of {weather_info['city_name']} for a weather forecast with all the following information:
+        {latest_forecast}"""
 
-    response = client.images.generate(
-        model="dall-e-3",
-        prompt=prompt,
-        size="1024x1024",
-        quality="standard",
-        n=1,
-    )
+        response = client.images.generate(
+            model="dall-e-3",
+            prompt=prompt,
+            size="1024x1024",
+            quality="standard",
+            n=1,
+        )
 
-    return response.data[0].url
+        return response.data[0].url
