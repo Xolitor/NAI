@@ -1,10 +1,13 @@
 # NAI: Votre Assistant Personnel
 Réalisé par SAMUEL Jonathan et VERKIMPE Axel
 
+## MINI PROJET IA: SUJET OUVERT 
+
 NAI (Assistant de Nouvelles et de Météo) est un assistant personnel qui offre deux fonctionnalités principales :
 
 1. Récupérer et résumer une liste d'articles en ligne sur un sujet donné.
-2. Fournir une prévision météorologique pour une ville spécifiée jusqu'à 5 jours dans le future et générer une image météo basée sur la prévision.
+2. Fournir une prévision météorologique pour une ville spécifiée jusqu'à 5 jours dans le future et générer une image météo basée sur la prévision actuelle.
+
 ## Fonctionnalités
 - **Récupération d'articles :** Obtenez les derniers articles en fonction d'un sujet spécifié.
 * **Prévision Météorologique :** Obtenez les prévisions météorologiques pour une ville spécifiée pour jusqu'à 5 jours.
@@ -38,7 +41,7 @@ pip install -r requirements.txt
 ```
 
 ### 2. Configurer les Variables d'Environnement
-Créez un fichier .env dans le répertoire racine du projet et ajoutez vos clés API fournit dans le .txt comme suit :
+Créez un fichier .env dans le répertoire racine du projet et ajoutez les clés API fournit dans le .txt sur Moodle comme suit :
 
 Copier le code
 ```
@@ -49,7 +52,7 @@ ASSISTANT_KEY=votre_cle_api_assistant
 ```
 
 ### 3. Lancer le Site Web
-Pour démarrer l'application web Streamlit, exécutez la commande suivante :
+Pour démarrer l'application web Streamlit, exécutez la commande suivante depuis un terminal dans la racine du projet :
 ```bash
 streamlit run main.py
 ```
@@ -57,7 +60,7 @@ streamlit run main.py
 ## Utilisation
 
 **Les API**
-Les fonctionnalités de notre Assistant utilise des API, une pour appeller une liste d'articles (newsapi.org), et une pour les prévisions métérologiques (openweathermap.org).
+Les fonctionnalités de notre Assistant utilisent des API, une pour appeller une liste d'articles (newsapi.org), et une pour les prévisions métérologiques (openweathermap.org).
 
 **Génération d'Image**
 La génération d'image passe par Dallee 3.0
