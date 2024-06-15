@@ -212,25 +212,24 @@ class AssistantManager:
 
     def wait_for_run_completion(self):
         if self.thread and self.run:
-            with st.spinner("Wait... Generating response..."):
-                while True:
-                    time.sleep(5)
-                    run_status = self.client.beta.threads.runs.retrieve(
-                        thread_id=self.thread.id,
-                        run_id=self.run.id
-                    )
+            while True:
+                time.sleep(5)
+                run_status = self.client.beta.threads.runs.retrieve(
+                    thread_id=self.thread.id,
+                    run_id=self.run.id
+                )
 
-                    if run_status.status == "completed":
-                        self.process_message()
-                        break
-                    elif run_status.status == "requires_action":
-                        self.call_required_functions(required_actions=run_status.required_action.submit_tool_outputs.model_dump())
+                if run_status.status == "completed":
+                    self.process_message()
+                    break
+                elif run_status.status == "requires_action":
+                    self.call_required_functions(required_actions=run_status.required_action.submit_tool_outputs.model_dump())
 
-                    elif run_status.status == "failed":
-                        raise AssistantRunFailedError("Assistant run failed")
+                elif run_status.status == "failed":
+                    raise AssistantRunFailedError("Assistant run failed")
 
-                    elif run_status.status == "stopped":
-                        break
+                elif run_status.status == "stopped":
+                    break
 
     def run_steps(self):
         run_steps = self.client.beta.threads.runs.steps.list(
@@ -309,6 +308,13 @@ def main():
                 margin: 0;
                 color: #333;
             }
+            @keyframes fadeIn {
+                from { opacity: 0; }
+                to { opacity: 1; }
+            }
+            .fade-in {
+                animation: fadeIn 2s ease-in;
+            }
         </style>
         """, unsafe_allow_html=True)
     st.markdown("<h1 class='title'>NAI: Your Personal Assistant</h1>", unsafe_allow_html=True)
@@ -359,8 +365,8 @@ def main():
                     manager.wait_for_run_completion()
 
                     summary = manager.get_summary()
-                    st.markdown("<div class='card'><h4>Here are some news articles:</h4></div>", unsafe_allow_html=True)
-                    st.markdown(f"<div class='card'><p>{summary}</p></div>", unsafe_allow_html=True)
+                    st.markdown("<div class='card fade-in'><h4>Here are some news articles:</h4></div>", unsafe_allow_html=True)
+                    st.markdown(f"<div class='card fade-in'><p>{summary}</p></div>", unsafe_allow_html=True)
 
                 except AssistantRunFailedError:
                     st.error("Assistant run failed. Please try again later.")
@@ -407,8 +413,8 @@ def main():
                     manager.wait_for_run_completion()
 
                     summary = manager.get_summary()
-                    st.markdown(f"<div class='card'><h4>Here is the weather forecast for {city}:</h4></div>", unsafe_allow_html=True)
-                    st.markdown(f"<div class='card'><p>{summary}</p></div>", unsafe_allow_html=True)
+                    st.markdown(f"<div class='card fade-in'><h4>Here is the weather forecast for {city}:</h4></div>", unsafe_allow_html=True)
+                    st.markdown(f"<div class='card fade-in'><p>{summary}</p></div>", unsafe_allow_html=True)
 
                 except AssistantRunFailedError:
                     st.error("Assistant run failed. Please try again later.")
@@ -425,7 +431,7 @@ def main():
                     image_url = generate_weather_image(weather_info)
                     if "error" not in image_url:
                         st.image(image_url)
-                        st.markdown(f"<div class='card'><p>{weather_info['weather_summaries'][0]}</p></div>", unsafe_allow_html=True)
+                        st.markdown(f"<div class='card fade-in'><p>{weather_info['weather_summaries'][0]}</p></div>", unsafe_allow_html=True)
                     else:
                         st.error(image_url["error"])
                 else:
