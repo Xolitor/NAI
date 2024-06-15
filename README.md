@@ -1,4 +1,6 @@
 # NAI: Votre Assistant Personnel
+Réalisé par SAMUEL Jonathan et VERKIMPE Axel
+
 NAI (Assistant de Nouvelles et de Météo) est un assistant personnel qui offre deux fonctionnalités principales :
 
 1. Récupérer et résumer une liste d'articles en ligne sur un sujet donné.
@@ -53,7 +55,14 @@ streamlit run main.py
 ```
 
 ## Utilisation
-**Récupération de Nouvelles**
+
+**Les API**
+Les fonctionnalités de notre Assistant utilise des API, une pour appeller une liste d'articles (newsapi.org), et une pour les prévisions métérologiques (openweathermap.org).
+
+**Génération d'Image**
+La génération d'image passe par Dallee 3.0
+
+**Récupération d'Articles**
 1. Entrez un sujet dans le champ de saisie intitulé "Ask for news on a topic or the weather of a city:".
     - Exemple de prompt: "Give me the latest news on bitcoin ?" ou encore "What's the news on Microsoft ?" 
     - **Note** : Il est préférable de choisir des sujets connus et mondiaux, car l'assistant va chercher dans une base de données de sites principalement américains.
@@ -67,7 +76,7 @@ streamlit run main.py
 3. L'assistant récupérera et résumera les prévisions météos sur la ville pour les 5 jours qui arrivent.
    
 **Génération d'image météorologique:**
-1. Entrez uniquement le nom d'une ville dans le champ de saisie intitulé "Enter City for an image of the weather:"   
+1. Entrez **UNIQUEMENT** le nom d'une ville dans le champ de saisie intitulé "Enter City for an image of the weather:"   
     - Exemple de prompt: "Paris", "Nice", "London", "New York"
 2. Cliquez sur "Generate Weather Image" pour générer une image basée sur les dernieres prévisions météorologiques.
 3. L'assistant génerera une image de la ville avec la météo de la prévision la plus récente.
