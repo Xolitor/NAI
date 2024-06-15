@@ -315,9 +315,9 @@ def main():
 
     st.write("NAI offers two functionalities:")
     st.write("1. Get a list of news articles on a given topic")
-    st.write("2. Get the weather forecast for a city")
+    st.write("2. Get the weather forecast for a city and generate a weather image")
 
-    tab1, tab2 = st.tabs(["📰 News", "🌤️ Weather"])
+    tab1, tab2, tab3 = st.tabs(["📰 News", "🌤️ Weather", "🌥️ Weather Image"])
 
     with tab1:
         st.subheader("Get the Latest News")
@@ -415,9 +415,12 @@ def main():
             else:
                 st.warning("Please enter a city.")
 
+    with tab3:
+        st.subheader("Generate Weather Image")
+        city_image = st.text_input("Enter the city:", key="weather_image_input")
         if st.button("Generate Weather Image", key="weather_image_button"):
-            if city:
-                weather_info = get_weather(city)
+            if city_image:
+                weather_info = get_weather(city_image)
                 if weather_info:
                     image_url = generate_weather_image(weather_info)
                     if "error" not in image_url:
