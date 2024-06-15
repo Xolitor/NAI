@@ -308,12 +308,12 @@ def main():
                 margin: 0;
                 color: #333;
             }
-            @keyframes fadeIn {
-                from { opacity: 0; }
-                to { opacity: 1; }
+            @keyframes slideIn {
+                from { transform: translateY(-20px); opacity: 0; }
+                to { transform: translateY(0); opacity: 1; }
             }
-            .fade-in {
-                animation: fadeIn 2s ease-in;
+            .slide-in {
+                animation: slideIn 1s ease-out;
             }
         </style>
         """, unsafe_allow_html=True)
@@ -365,8 +365,8 @@ def main():
                     manager.wait_for_run_completion()
 
                     summary = manager.get_summary()
-                    st.markdown("<div class='card fade-in'><h4>Here are some news articles:</h4></div>", unsafe_allow_html=True)
-                    st.markdown(f"<div class='card fade-in'><p>{summary}</p></div>", unsafe_allow_html=True)
+                    st.markdown("<div class='card slide-in'><h4>Here are some news articles:</h4></div>", unsafe_allow_html=True)
+                    st.markdown(f"<div class='card slide-in'><p>{summary}</p></div>", unsafe_allow_html=True)
 
                 except AssistantRunFailedError:
                     st.error("Assistant run failed. Please try again later.")
@@ -413,8 +413,8 @@ def main():
                     manager.wait_for_run_completion()
 
                     summary = manager.get_summary()
-                    st.markdown(f"<div class='card fade-in'><h4>Here is the weather forecast for {city}:</h4></div>", unsafe_allow_html=True)
-                    st.markdown(f"<div class='card fade-in'><p>{summary}</p></div>", unsafe_allow_html=True)
+                    st.markdown(f"<div class='card slide-in'><h4>Here is the weather forecast for {city}:</h4></div>", unsafe_allow_html=True)
+                    st.markdown(f"<div class='card slide-in'><p>{summary}</p></div>", unsafe_allow_html=True)
 
                 except AssistantRunFailedError:
                     st.error("Assistant run failed. Please try again later.")
@@ -431,7 +431,7 @@ def main():
                     image_url = generate_weather_image(weather_info)
                     if "error" not in image_url:
                         st.image(image_url)
-                        st.markdown(f"<div class='card fade-in'><p>{weather_info['weather_summaries'][0]}</p></div>", unsafe_allow_html=True)
+                        st.markdown(f"<div class='card slide-in'><p>{weather_info['weather_summaries'][0]}</p></div>", unsafe_allow_html=True)
                     else:
                         st.error(image_url["error"])
                 else:
