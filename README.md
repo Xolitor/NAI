@@ -43,6 +43,8 @@ pip install -r requirements.txt
 ### 2. Configurer les Variables d'Environnement
 Créez un fichier .env dans le répertoire racine du projet et ajoutez les clés API fournit dans le .txt sur Moodle comme suit :
 
+**Attention** : J'ai intégré ma clé OpenAI personnelle. Si vous décidez de l'utiliser, merci de faire attention au nombre de requêtes. :)
+
 Copier le code
 ```
 OPENAI_API_KEY=votre_cle_api_openai
